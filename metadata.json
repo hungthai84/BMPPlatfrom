@@ -1,0 +1,6 @@
+{
+  "name": "Process Management Platform",
+  "description": "Hệ thống Web App hiện đại dành cho việc xây dựng, quản lý, trực quan hóa và ban hành quy trình vận hành doanh nghiệp chuẩn ISO 9001, tích hợp AI Assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
