@@ -9,9 +9,10 @@ interface ProcessGeneralInfoProps {
   process: Process;
   onSaveProcess: (p: Process) => void;
   currentUserRole: string;
+  departments: string[];
 }
 
-export default function ProcessGeneralInfo({ processes, process, onSaveProcess, currentUserRole }: ProcessGeneralInfoProps) {
+export default function ProcessGeneralInfo({ processes, process, onSaveProcess, currentUserRole, departments }: ProcessGeneralInfoProps) {
   const [openRefDialog, setOpenRefDialog] = useState(false);
   const [formData, setFormData] = useState<Partial<Process>>({
     name: process.name || '',
@@ -27,7 +28,7 @@ export default function ProcessGeneralInfo({ processes, process, onSaveProcess, 
     termList: process.termList || [{ term: '', explanation: '' }],
     abbreviationList: process.abbreviationList || [{ abbreviation: '', meaning: '' }],
     generalPrinciples: process.generalPrinciples || '',
-    responsibilities: process.responsibilities || '',
+    responsibilitiesList: process.responsibilitiesList || [{ department: '', position: '', responsibility: '' }],
   });
 
   const isEditable = currentUserRole !== "Viewer";
@@ -97,14 +98,15 @@ export default function ProcessGeneralInfo({ processes, process, onSaveProcess, 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Phòng ban</label>
-              <input
-                type="text"
+              <select
                 value={formData.department}
                 onChange={(e) => handleChange('department', e.target.value)}
                 disabled={!isEditable}
                 className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 disabled:opacity-60"
-                placeholder="VD: Phòng Hành chính..."
-              />
+              >
+                <option value="">Chọn phòng ban...</option>
+                {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+              </select>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Tên quy trình</label>
@@ -410,16 +412,56 @@ export default function ProcessGeneralInfo({ processes, process, onSaveProcess, 
             />
           </div>
 
-          <div className="space-y-2 pl-4 border-l-2 border-indigo-100 dark:border-indigo-900/50">
-            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">2. Trách nhiệm</label>
-            <textarea
-              value={formData.responsibilities}
-              onChange={(e) => handleChange('responsibilities', e.target.value)}
-              disabled={!isEditable}
-              rows={4}
-              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 disabled:opacity-60"
-              placeholder="Trách nhiệm của..."
-            />
+          <div className="space-y-4 pl-4 border-l-2 border-indigo-100 dark:border-indigo-900/50">
+            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex justify-between items-center">
+              2. Trách nhiệm thực hiện
+              {isEditable && (
+                <button onClick={() => addObjectArrayItem('responsibilitiesList', { department: '', position: '', responsibility: '' })} className="text-indigo-600 hover:text-indigo-700 p-1">
+                  <Plus className="w-4 h-4" />
+                </button>
+              )}
+            </label>
+            <div className="space-y-2">
+              <div className="grid grid-cols-3 gap-2 mb-1 px-1">
+                <span className="text-xs font-semibold text-slate-500">Phòng ban</span>
+                <span className="text-xs font-semibold text-slate-500">Chức vụ</span>
+                <span className="text-xs font-semibold text-slate-500">Trách nhiệm</span>
+              </div>
+              {(formData.responsibilitiesList || []).map((item, idx) => (
+                <div key={idx} className="flex gap-2">
+                  <div className="grid grid-cols-3 gap-2 flex-1">
+                    <select
+                      value={item.department}
+                      onChange={(e) => handleObjectArrayChange('responsibilitiesList', idx, 'department', e.target.value)}
+                      disabled={!isEditable}
+                      className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 disabled:opacity-60"
+                    >
+                      <option value="">Chọn phòng ban...</option>
+                      {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                    </select>
+                    <input
+                      value={item.position}
+                      onChange={(e) => handleObjectArrayChange('responsibilitiesList', idx, 'position', e.target.value)}
+                      disabled={!isEditable}
+                      className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 disabled:opacity-60"
+                      placeholder="Chức vụ..."
+                    />
+                    <input
+                      value={item.responsibility}
+                      onChange={(e) => handleObjectArrayChange('responsibilitiesList', idx, 'responsibility', e.target.value)}
+                      disabled={!isEditable}
+                      className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 disabled:opacity-60"
+                      placeholder="Trách nhiệm..."
+                    />
+                  </div>
+                  {isEditable && (
+                    <button onClick={() => removeObjectArrayItem('responsibilitiesList', idx)} className="text-red-500 p-2 hover:bg-red-50 rounded-lg">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 

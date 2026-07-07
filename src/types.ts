@@ -14,7 +14,13 @@ export type NodeType =
   | 'zns'
   | 'chatbot'
   | 'document'
-  | 'form';
+  | 'form'
+  | 'manual'
+  | 'delay'
+  | 'connector'
+  | 'database'
+  | 'note'
+  | 'step';
 
 export interface FormField {
   id: string;
@@ -52,15 +58,21 @@ export interface WorkflowNode {
   assigneeRole: string;
   assigneeDept: string;
   assigneePerson: string;
-  sla: number; // in hours
+  stepMethod?: string;
+  action?: string;
+  sla?: string | number; // in minutes or description
+  slaInMinutes?: number;
   description: string;
   objective: string;
-  startCondition: string;
-  endCondition: string;
-  checklist: string[];
-  sop: SOP;
-  formId: string | null;
+  startCondition?: string;
+  endCondition?: string;
+  checklist?: string[];
+  tasks?: { description: string; duration: number }[];
+  sop?: SOP;
+  formId?: string | null;
+  subProcessId?: string; // Link to sub-process
   linkedNodeIds?: string[];
+  theme?: string; // For grouping nodes
   x: number;
   y: number;
 }
@@ -70,6 +82,14 @@ export interface WorkflowEdge {
   source: string;
   target: string;
   label?: string;
+}
+
+export interface ProcessSnapshot {
+  id: string;
+  timestamp: string;
+  description: string;
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
 }
 
 export interface ChangelogItem {
@@ -90,12 +110,13 @@ export interface Process {
   completionRate: number;
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
+  snapshots?: ProcessSnapshot[]; // Add snapshots
   version: string;
   publishDate: string;
   creator: string;
   reviewer: string;
   approver: string;
-  changelog: ChangelogItem[];
+  changelog?: ChangelogItem[];
   
   // New fields for Document Info
   decisionNumber?: string;
@@ -117,6 +138,7 @@ export interface Process {
   abbreviationList?: { abbreviation: string; meaning: string }[];
   generalPrinciples?: string;
   responsibilities?: string;
+  responsibilitiesList?: { department: string; position: string; responsibility: string }[];
 }
 
 export type RoleType =
@@ -133,3 +155,41 @@ export interface QuizQuestion {
   options: string[];
   correctAnswer: number;
 }
+
+export interface SupportRequestData {
+  number: string;
+  companyName: string;
+  customerName: string;
+  address: string;
+  idCard: string;
+  supportRequest: string;
+  serviceType: string;
+  content: string;
+  receptionChannel: string;
+  date: string;
+  requesterName: string;
+}
+
+export interface WallpaperConfig {
+  type: 'none' | 'image' | 'video' | 'gradient' | 'pattern';
+  value: string;
+  blur?: number;
+  opacity?: number;
+}
+
+export type ThemePreset = 'slate' | 'midnight' | 'amber' | 'ocean';
+
+export interface UIConfig {
+  theme: ThemePreset;
+  transparency: {
+    sidebarOpacity: number;
+    cardOpacity: number;
+    contentOpacity: number;
+    blur: number;
+  };
+  sound: {
+    enabled: boolean;
+    volume: number;
+  };
+}
+

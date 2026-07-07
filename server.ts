@@ -151,6 +151,27 @@ Yêu cầu phân tích và đưa ra ý kiến chuyên gia bằng Tiếng Việt 
   }
 });
 
+// AI: Analyze Bottlenecks
+app.post("/api/ai/analyze-bottlenecks", async (req, res) => {
+  const { nodes, edges } = req.body;
+  try {
+    const ai = getAi();
+    const prompt = `Bạn là chuyên gia tư vấn cải tiến quy trình. Hãy phân tích sơ đồ quy trình gồm các nodes: ${JSON.stringify(nodes)} và edges: ${JSON.stringify(edges)}. 
+    Hãy tìm các nút thắt cổ chai (bottlenecks) và đề xuất tối ưu.
+    Trả về JSON: { "bottlenecks": ["nodeId1 - mô tả", ...], "recommendations": ["đề xuất 1", ...] }`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: prompt,
+      config: { responseMimeType: "application/json" },
+    });
+
+    return res.json(JSON.parse(response.text || "{}"));
+  } catch (error) {
+    return res.json({ bottlenecks: [], recommendations: ["Không thể phân tích ngay lúc này."] });
+  }
+});
+
 // AI Search bar query router
 app.post("/api/ai/search", async (req, res) => {
   const { query, availableProcesses } = req.body;

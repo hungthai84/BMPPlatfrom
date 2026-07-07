@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Process, DynamicForm, ChangelogItem } from "./types";
+import { Process, DynamicForm, ChangelogItem, WallpaperConfig, UIConfig, ThemePreset } from "./types";
 import { INITIAL_PROCESSES, INITIAL_FORMS } from "./data";
+import { playClickSound } from "./lib/audio-utils";
+import OrgChart from "./components/OrgChart";
 import Dashboard from "./components/Dashboard";
 import ProcessMap from "./components/ProcessMap";
 import WorkflowBuilder from "./components/WorkflowBuilder";
@@ -14,6 +16,7 @@ import MyTasks from "./components/MyTasks";
 import ProcessTracking from "./components/ProcessTracking";
 import SystemSettings from "./components/SystemSettings";
 import ProcessDashboard from "./components/ProcessDashboard";
+import { SupportRequestManager } from "./components/SupportRequestManager";
 
 import { 
   Box, Drawer, AppBar, Toolbar, List, ListItem, ListItemButton, 
@@ -23,7 +26,7 @@ import {
 import { 
   LayoutDashboard, Network, GitBranch, BookOpen, FileSpreadsheet, 
   FileCheck2, GraduationCap, Bot, Clock, Shield, ChevronRight, Plus, Check,
-  CheckCircle, AlertTriangle, Menu, ChevronLeft, Search, X, CheckSquare, Activity, Settings, BarChart2, Bell
+  CheckCircle, AlertTriangle, Menu, ChevronLeft, Search, X, CheckSquare, Activity, Settings, BarChart2, Bell, Users
 } from "lucide-react";
 
 interface Toast {
@@ -55,9 +58,69 @@ export default function App() {
       return false;
     }
   });
+
+  const [wallpaper, setWallpaper] = useState<WallpaperConfig>(() => {
+    try {
+      const saved = localStorage.getItem("system_wallpaper");
+      return saved ? JSON.parse(saved) : { type: 'none', value: '', blur: 0, opacity: 100 };
+    } catch (e) {
+      return { type: 'none', value: '', blur: 0, opacity: 100 };
+    }
+  });
+
+  const [uiConfig, setUiConfig] = useState<UIConfig>(() => {
+    try {
+      const saved = localStorage.getItem("system_ui_config");
+      return saved ? JSON.parse(saved) : {
+        theme: 'slate',
+        transparency: {
+          sidebarOpacity: 85,
+          cardOpacity: 90,
+          contentOpacity: 30,
+          blur: 10
+        },
+        sound: {
+          enabled: true,
+          volume: 0.06
+        }
+      };
+    } catch (e) {
+      return {
+        theme: 'slate',
+        transparency: { sidebarOpacity: 85, cardOpacity: 90, contentOpacity: 30, blur: 10 },
+        sound: { enabled: true, volume: 0.06 }
+      };
+    }
+  });
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('button') || target.closest('a') || target.closest('[role="button"]') || target.closest('.cursor-pointer')) {
+        playClickSound(uiConfig.sound);
+      }
+    };
+    window.addEventListener('mousedown', handleClick);
+    return () => window.removeEventListener('mousedown', handleClick);
+  }, [uiConfig.sound]);
+
+  const handleWallpaperChange = (config: WallpaperConfig) => {
+    setWallpaper(config);
+    try {
+      localStorage.setItem("system_wallpaper", JSON.stringify(config));
+    } catch (e) {}
+  };
+
+  const handleUIConfigChange = (config: Partial<UIConfig>) => {
+    const newConfig = { ...uiConfig, ...config };
+    setUiConfig(newConfig);
+    try {
+      localStorage.setItem("system_ui_config", JSON.stringify(newConfig));
+    } catch (e) {}
+  };
   const [sidebarSearchQuery, setSidebarSearchQuery] = useState<string>("");
   const [companyName, setCompanyName] = useState<string>("CÔNG TY TNHH MTV SEN VÀNG VIỆT NAM");
-  const [departments, setDepartments] = useState<string[]>(["Phòng Nhân Sự", "Phòng Kinh Doanh", "Phòng Kỹ Thuật"]);
+  const [departments, setDepartments] = useState<string[]>(["Ban Điều Hành", "Phòng Hành Chính", "Phòng Nhân sự", "Phòng Tài Chính", "Phòng Kế toán", "Phòng Mua hàng", "Phòng Kho", "Phòng Logistics", "Phòng Kinh doanh", "Marketing", "Chăm sóc Khách hàng", "Contact Center", "Helpdesk", "Công nghệ thông tin", "Phát triển phần mềm", "QA/QC", "Sản xuất", "R&D", "Pháp chế", "Kiểm toán nội bộ", "PMO", "BI & Data", "AI & Chuyển đổi số"]);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(prev => {
@@ -148,6 +211,7 @@ export default function App() {
         { id: 'dashboard', label: 'Bảng Điều Khiển', icon: LayoutDashboard, desc: 'Chỉ số & Tổng quan chất lượng' },
         { id: 'analytics', label: 'Báo Cáo Nâng Cao', icon: BarChart2, desc: 'Phân tích nút thắt & hiệu suất' },
         { id: 'map', label: 'Bản Đồ Quy Trình', icon: Network, desc: 'Sơ đồ liên kết 3 cấp độ phòng ban' },
+        { id: 'org-chart', label: 'Sơ Đồ Tổ Chức', icon: Users, desc: 'Mối quan hệ phòng ban & quy trình' },
       ]
     },
     {
@@ -174,6 +238,7 @@ export default function App() {
       title: 'Hỗ Trợ & Trợ Giúp',
       items: [
         { id: 'ai-search', label: 'Trợ Lý AI Search', icon: Bot, desc: 'Tra cứu quy trình thông minh' },
+        { id: 'support-request', label: 'Yêu Cầu Hỗ Trợ', icon: FileCheck2, desc: 'Giấy yêu cầu hỗ trợ từ KH' },
       ]
     }
   ];
@@ -385,6 +450,8 @@ export default function App() {
             />
           )}
 
+          {activeTab === 'org-chart' && <OrgChart />}
+
           {activeTab === 'tasks' && <MyTasks />}
 
           {activeTab === 'tracking' && <ProcessTracking />}
@@ -399,6 +466,9 @@ export default function App() {
               onSaveForms={handleSaveForms}
               currentUserRole={currentUserRole}
               companyName={companyName}
+              departments={departments}
+              onCreateProcess={handleCreateProcess}
+              onSelectProcess={handleSelectProcess}
             />
           )}
 
@@ -415,6 +485,10 @@ export default function App() {
               setCompanyName={setCompanyName}
               departments={departments}
               setDepartments={setDepartments}
+              wallpaper={wallpaper}
+              onWallpaperChange={handleWallpaperChange}
+              uiConfig={uiConfig}
+              onUIConfigChange={handleUIConfigChange}
             />
           )}
 
@@ -423,6 +497,8 @@ export default function App() {
               processes={processes} 
             />
           )}
+
+          {activeTab === 'support-request' && <SupportRequestManager />}
           </main>
 
           {/* FOOTER */}
